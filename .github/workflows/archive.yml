@@ -1,0 +1,82 @@
+name: archive
+on:
+  schedule: [{cron: "0 2 * * *"}]
+  workflow_dispatch:
+concurrency: kaggle
+permissions: {contents: write}   # the raw-document bundles live in a GitHub release (see ci/kaggle.sh)
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 358
+    env:
+      KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+      KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
+      BUDGET: 7200         # Wayback: repair missing stored files, then new captures: 2h
+      LIVE_BUDGET: 3000    # live-site crawl: 50min (37 hosts)
+      PARSE_BUDGET: 3600   # parse: 60min
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -r requirements.txt
+      - run: python -c "import test_taxonomy as t; t.test_all()" && python test_panel.py && python test_scrape.py && python test_places.py && python test_news.py
+      - name: Validate Kaggle metadata (fail in seconds, not after hours of scraping)
+        run: |
+          python - <<'PY'
+          import json, glob
+          import os
+          for f in glob.glob("kaggle/*.json"):
+              m = json.load(open(f))
+              assert 20 <= len(m["subtitle"]) <= 80, f + ": subtitle must be 20-80 chars"
+              assert 6 <= len(m["title"]) <= 50, f + ": title must be 6-50 chars"
+              assert os.path.exists(m["cover"]), f + ": cover image missing"
+          PY
+      - name: Check Kaggle login (fail in seconds, not after hours of work)
+        timeout-minutes: 10
+        run: source ci/kaggle.sh && { exists crimebase || true; }
+      - name: Restore previous datasets (Kaggle is the state store)
+        id: restore
+        timeout-minutes: 20
+        run: |
+          source ci/kaggle.sh
+          restore_raw data/raw
+          restore crimebase data/clean
+      # Collection is best-effort: a flaky upstream must never block publishing what was already gathered.
+      - name: Scrape Wayback Machine
+        if: steps.restore.outcome == 'success'
+        continue-on-error: true
+        timeout-minutes: 135
+        run: python scrape.py
+      - name: Crawl live government sites
+        if: ${{ !cancelled() && steps.restore.outcome == 'success' }}
+        continue-on-error: true
+        timeout-minutes: 60
+        run: python live.py
+      # Clean data first: it is what people use, and the many-file raw upload is the slowest step.
+      - name: Parse
+        if: ${{ !cancelled() && steps.restore.outcome == 'success' }}
+        timeout-minutes: 80
+        run: python parse.py
+      - name: Push clean data
+        if: ${{ !cancelled() && steps.restore.outcome == 'success' }}
+        timeout-minutes: 30
+        run: |
+          python profile.py
+          cp DATA_DICTIONARY.md data/clean/ && ls data/clean
+          source ci/kaggle.sh && push crimebase data/clean kaggle/clean.json "daily $(date -I)"
+      - name: Push raw archive
+        if: ${{ !cancelled() && steps.restore.outcome == 'success' }}
+        timeout-minutes: 40   # release first (the state), then 16 zip bundles + manifest to Kaggle: its create call times out on ~1,600 loose files
+        run: source ci/kaggle.sh && push_raw data/raw "daily $(date -I)"
+      # Listing settings that `datasets version` ignores (sources, update frequency, cover image) and the quick-start notebook. Never fails the run.
+      - name: Polish Kaggle listings
+        if: ${{ !cancelled() && steps.restore.outcome == 'success' }}
+        continue-on-error: true
+        timeout-minutes: 40
+        run: |
+          source ci/kaggle.sh
+          polish crimebase data/clean
+          polish crimebase-raw data/_raw_push
+          if [ "$(date +%u)" = 1 ] || [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then notebook crimebase; fi

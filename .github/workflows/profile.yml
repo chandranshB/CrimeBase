@@ -1,0 +1,25 @@
+name: profile
+on: workflow_dispatch
+concurrency: kaggle
+jobs:
+  profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+      KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -r requirements.txt
+      - run: source ci/kaggle.sh && restore crimebase data/clean
+      - run: python profile.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: clean
+          path: |
+            data/clean/*.parquet
+            data/clean/PROFILE.md
+          retention-days: 3

@@ -1,0 +1,38 @@
+{
+ "title": "India Crime Data: NCRB Raw Documents",
+ "id": "USER/crimebase-raw",
+ "licenses": [
+  {
+   "name": "other"
+  }
+ ],
+ "subtitle": "Original NCRB reports and tables, incl. removed ones, with source links",
+ "keywords": [
+  "india",
+  "crime",
+  "government",
+  "law"
+ ],
+ "cover": "kaggle/raw-cover.png",
+ "expectedUpdateFrequency": "daily",
+ "userSpecifiedSources": "National Crime Records Bureau (ncrb.gov.in), Ministry of Home Affairs, Government of India: Crime in India, Accidental Deaths & Suicides in India, Prison Statistics and additional tables, read from the live site and from the Internet Archive Wayback Machine (web.archive.org), including files since removed. Also Bureau of Police Research & Development, National Human Rights Commission, National Commission for Women, National Commission for Protection of Child Rights, Ministry of Road Transport & Highways, Narcotics Control Bureau and Ministry of Home Affairs documents. News: public RSS feeds of The Hindu, The Times of India, Hindustan Times, NDTV, News18, India Today, Deccan Chronicle, Scroll and other Indian outlets. Collection code and the full list of upstreams: https://github.com/chandranshB/CrimeBase (SOURCES.md).",
+ "description": "# India crime data: the original documents\n\nThe unmodified PDF, spreadsheet and Word files behind the cleaned **crimebase** dataset: India's National Crime Records Bureau (*Crime in India*, *Accidental Deaths & Suicides*, *Prison Statistics* and more) and related government bodies, recovered from the live sites and the Internet Archive, **including files that have since been removed**.\n\n## How to use\n* `documents.csv` is the catalogue: one row per file with its title, year, size, publisher, original URL, Internet Archive permalink and whether tables were extracted from it. Start there.\n* `manifest.csv` is the full ledger: every URL each file was seen at, with SHA-256, Wayback capture time and fetch date.\n* Files are content-addressed and live in folders `raw-0` ... `raw-f` (the first character of the file name): `raw-3/3a9f...c1.pdf`. Kaggle unpacks the `raw-*.zip` bundles it is given into those folders.\n* The same files are also published as a GitHub release (https://github.com/chandranshB/CrimeBase/releases/tag/raw-archive) for bulk download.\n* The tables extracted from these documents are in the companion dataset **crimebase** (`file` there = file name here).\n\n## Provenance and etiquette\nOnly public government documents are collected, politely (robots.txt honoured, rate-limited, identified). The same bytes under several URLs are stored once and every URL is recorded. Refreshed daily.\n\nOpen-source pipeline (AGPL-3.0): https://github.com/chandranshB/CrimeBase. Maintained by Chandransh.\n",
+ "resources": [
+  {
+   "path": "documents.csv",
+   "description": "Catalogue of every file: title, year, size, publisher, original URL, Internet Archive permalink, parse status."
+  },
+  {
+   "path": "manifest.csv",
+   "description": "Provenance ledger: every URL each file was seen at, with SHA-256, Wayback capture time, publisher and fetch date."
+  },
+  {
+   "path": "live_state.json",
+   "description": "Pipeline working state of the live-site crawler (ETag / Last-Modified per URL). Not for analysis."
+  },
+  {
+   "path": "raw-*.zip",
+   "description": "Original documents whose file names start with this character; Kaggle unpacks them into the folder of the same name."
+  }
+ ]
+}

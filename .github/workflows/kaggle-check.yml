@@ -1,0 +1,62 @@
+name: kaggle-check
+# Look at what Kaggle holds for each dataset (listing settings, privacy) and whether our tooling can read it. Read-only unless "polish" is ticked.
+on:
+  workflow_dispatch:
+    inputs:
+      polish: {description: "Also APPLY the listing settings (title, sources, update frequency, cover, column docs) to crimebase from stub files: a test of ci/kmeta.py + polish", type: boolean, default: false}
+concurrency: kaggle
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+      KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -r requirements.txt
+      - name: Listing settings Kaggle holds
+        run: |
+          source ci/kaggle.sh
+          for d in crimebase crimebase-raw; do
+            echo "=== $d"; kaggle datasets status "$KAGGLE_USERNAME/$d" || true
+            mkdir -p /tmp/$d; kaggle datasets metadata "$KAGGLE_USERNAME/$d" -p /tmp/$d || true
+            python - "$d" <<'PY'
+          import json, sys
+          m = json.load(open(f"/tmp/{sys.argv[1]}/dataset-metadata.json")); i = m.get("info", m)
+          print("keys:", sorted(i))
+          for k in ("title", "subtitle", "isPrivate", "expectedUpdateFrequency", "userSpecifiedSources", "keywords", "licenses", "collaborators"):
+              print(f"  {k}: {str(i.get(k))[:140]}")
+          print("  files with columns:", sum(1 for f in i.get("data", []) if f.get("columns")), "of", len(i.get("data", [])))
+          PY
+            python ci/kmeta.py kernel /tmp /tmp/dummy "/tmp/$d/dataset-metadata.json" && echo "privacy readable for $d" || echo "privacy NOT readable for $d"
+          done
+      - name: Apply the listing settings (test of polish)
+        if: ${{ inputs.polish }}
+        run: |
+          source ci/kaggle.sh
+          python - <<'PY'
+          import json, sys
+          sys.path.insert(0, "kaggle")
+          from pathlib import Path
+          import pyarrow as pa, pyarrow.parquet as pq
+          from columns import COLUMNS
+          d = Path("/tmp/stub"); d.mkdir(exist_ok=True)
+          for r in json.load(open("kaggle/clean.json"))["resources"]:   # stand-ins with the right names and columns (a real run has the real files)
+              f, cols = d / r["path"], [c for c, _, _ in COLUMNS.get(r["path"], [])]
+              if f.suffix == ".parquet": pq.write_table(pa.table({c: pa.array([], pa.string()) for c in cols or ["x"]}), f)
+              elif f.suffix == ".csv": f.write_text(",".join(cols or ["x"]) + chr(10))
+              else: f.write_text("x")
+          PY
+          python ci/kmeta.py prep kaggle/clean.json /tmp/stub "$KAGGLE_USERNAME"
+          polish crimebase /tmp/stub
+          kaggle datasets metadata "$KAGGLE_USERNAME/crimebase" -p /tmp/after
+          python - <<'PY'
+          import json
+          i = json.load(open("/tmp/after/dataset-metadata.json")); i = i.get("info", i)
+          for k in ("title", "subtitle", "isPrivate", "expectedUpdateFrequency", "userSpecifiedSources", "keywords"): print(f"  {k}: {str(i.get(k))[:120]}")
+          print("  files with columns:", sum(1 for f in i.get("data", []) if f.get("columns")), "of", len(i.get("data", [])))
+          PY

@@ -1,0 +1,87 @@
+{
+ "title": "India Crime Data: NCRB Statistics & News",
+ "id": "USER/crimebase",
+ "licenses": [
+  {
+   "name": "other"
+  }
+ ],
+ "subtitle": "Clean state-by-year India crime statistics, every number linked to its source",
+ "keywords": [
+  "india",
+  "crime",
+  "government",
+  "news",
+  "law"
+ ],
+ "cover": "kaggle/clean-cover.png",
+ "expectedUpdateFrequency": "daily",
+ "userSpecifiedSources": "National Crime Records Bureau (ncrb.gov.in), Ministry of Home Affairs, Government of India: Crime in India, Accidental Deaths & Suicides in India, Prison Statistics and additional tables, read from the live site and from the Internet Archive Wayback Machine (web.archive.org), including files since removed. Also Bureau of Police Research & Development, National Human Rights Commission, National Commission for Women, National Commission for Protection of Child Rights, Ministry of Road Transport & Highways, Narcotics Control Bureau and Ministry of Home Affairs documents. News: public RSS feeds of The Hindu, The Times of India, Hindustan Times, NDTV, News18, India Today, Deccan Chronicle, Scroll and other Indian outlets. Collection code and the full list of upstreams: https://github.com/chandranshB/CrimeBase (SOURCES.md).",
+ "description": "# India crime data you can trace\n\nOfficial crime statistics from India's **National Crime Records Bureau (NCRB)**, cleaned into one tidy table and linked to the exact document each number came from, plus classified crime-news metadata. Rebuilt automatically every day.\n\n## Start here\n| File | What it is |\n|---|---|\n| `crime_state_year.csv` | **The clean table.** One row per state/UT x year x crime head x measure (cases registered, persons arrested, convicted, victims ...). Only numbers whose state rows add up to NCRB's own all-India figure; duplicates across files collapsed; disagreements flagged in `disputed`. |\n| `crime_india_year.csv` | The same for **all of India**: NCRB's national crime-head tables plus the all-India row of every state table, so 2001-2015 and 2018 onward join up. |\n| `documents.csv` | Every source document: title, publisher, original URL, Internet Archive permalink, and how many numbers it gave. Join on `file`. |\n| `facts.parquet` | Everything NCRB's Excel tables contain, one number per row (states, districts, cities, crime heads), with metric, category, year, `qc` flag and full provenance. About 7 million rows. |\n| `news.parquet`, `news_events.parquet` | Crime stories from Indian news feeds: category, state, district, victim group, stage of the case, link, one-line summary; and one row per distinct event. |\n| `facts_pdf_lowconf.parquet` | The same, extracted from archived PDFs. Check against the source before use. |\n| `ref_states.csv`, `ref_categories.csv` | Code lists. |\n| `PROFILE.md`, `DATA_DICTIONARY.md` | Coverage and known gaps (regenerated every run); every column explained. |\n\nThe other files (`facts_raw.parquet`, `parse_state.json`, `unmapped_states.csv`, `news_snapshots.txt`, `news_rejected.txt`) are the pipeline's working state; ignore them.\nThe original PDFs and spreadsheets are in the companion dataset **crimebase-raw**: a row's `file` is `raw-<first character of file>/<file>` there.\n\n## Quick start\n```python\nimport pandas as pd\nD = '/kaggle/input/crimebase'\np = pd.read_csv(f'{D}/crime_state_year.csv')\n\n# murders registered in India under the IPC, by year\nn = pd.read_csv(f'{D}/crime_india_year.csv')\nm = n[(n.scope == 'ipc') & (n.crime_head == 'Murder') & (n.metric == 'cases_registered')]\nprint(m.set_index('year').value)\n\n# where did a number come from?\ndocs = pd.read_csv(f'{D}/documents.csv')\nprint(m.merge(docs[['file', 'source_url', 'wayback_url']], on='file').iloc[0])\n\n# state by state, 2015\nst = p[(p.scope == 'ipc') & (p.crime_head == 'Murder') & (p.metric == 'cases_registered') & (p.year == 2015)]\nprint(st.nlargest(5, 'value')[['state', 'value']])\n\n# crime news: distinct events by category\ne = pd.read_parquet(f'{D}/news_events.parquet')\nprint(e.groupby('category').size().sort_values())\n```\nA worked example is in the notebook **CrimeBase quickstart**.\n\n## Why you can rely on it\n* **Sourced**: every row names its document; documents carry the original URL and the Internet Archive permalink of the exact capture.\n* **Checked**: state values are summed and compared with NCRB's own all-India row (`qc` in `facts.parquet`; only `sum_ok` rows enter the state table).\n* **Honest**: conflicting values are kept and flagged, years are never guessed from ranges, and inferred fields (metric, category) are labelled as inferred.\n* **No redundancy**: identical files are stored once; identical facts collapse to one row.\n* **Private by design**: no FIR or victim-level data; headlines and summaries of sexual-offence and child-victim stories are withheld.\n\n## Know the limits\nReported crime is not actual crime: registration practices differ by state and year, and the move from IPC to BNS (2024 onward) needs care across years. Coverage follows what NCRB published as spreadsheets; some years are PDF-only (see `PROFILE.md` for the exact map). News is a sample of public feeds, not a census. `scope` matters: the same head (rape, murder) appears in several table families that overlap, so never add across scopes.\n\n## Updates and credit\nRefreshed daily by an open-source pipeline (AGPL-3.0): https://github.com/chandranshB/CrimeBase. Maintained by Chandransh. If this helps your work, a citation is appreciated: *Chandransh, CrimeBase: source-cited India crime data (Kaggle / GitHub, chandranshB/CrimeBase).* Corrections are welcome on GitHub. Government data is published under India's open data policy.\n",
+ "resources": [
+  {
+   "path": "crime_state_year.csv",
+   "description": "The clean table: state/UT x year x crime head x measure, from NCRB tables whose state rows add up to the all-India figure. Join `file` to documents.csv for the source."
+  },
+  {
+   "path": "crime_india_year.csv",
+   "description": "The same table for all of India: national crime-head tables plus the all-India row of each state table."
+  },
+  {
+   "path": "documents.csv",
+   "description": "Catalogue of every source document: title, publisher, original URL, Internet Archive permalink, how many numbers it gave."
+  },
+  {
+   "path": "facts.parquet",
+   "description": "Every number from NCRB's Excel tables, one per row (state, district, city, crime head), with metric, category, year, QC flag and source URL + Wayback permalink."
+  },
+  {
+   "path": "facts_pdf_lowconf.parquet",
+   "description": "The same facts extracted from archived PDFs. Entity, year and value are usually right but headers can shift a column: verify against the source."
+  },
+  {
+   "path": "news.parquet",
+   "description": "Crime stories from Indian news feeds: link, headline and one-line summary (withheld for sensitive stories), category, state, district, victim group, stage, event cluster."
+  },
+  {
+   "path": "news_events.parquet",
+   "description": "One row per distinct news event, with how many outlets reported it."
+  },
+  {
+   "path": "ref_states.csv",
+   "description": "ISO 3166-2:IN state / UT codes used in the state_code columns."
+  },
+  {
+   "path": "ref_categories.csv",
+   "description": "The crime category vocabulary with a one-line definition each."
+  },
+  {
+   "path": "PROFILE.md",
+   "description": "Auto-generated map of coverage and known gaps, refreshed every run."
+  },
+  {
+   "path": "DATA_DICTIONARY.md",
+   "description": "Every column and every caveat explained."
+  },
+  {
+   "path": "facts_raw.parquet",
+   "description": "Pipeline working state (parsed rows before QC and de-duplication). Not for analysis."
+  },
+  {
+   "path": "parse_state.json",
+   "description": "Pipeline working state: which source files have been parsed, and with which parser version."
+  },
+  {
+   "path": "unmapped_states.csv",
+   "description": "Diagnostic: state-table row labels the parser could not map to a state, with counts."
+  },
+  {
+   "path": "news_snapshots.txt",
+   "description": "Pipeline working state: archived news-feed snapshots already read."
+  },
+  {
+   "path": "news_rejected.txt",
+   "description": "Pipeline working state: article URLs judged not to be crime stories."
+  }
+ ]
+}

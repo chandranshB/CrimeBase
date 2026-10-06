@@ -1,0 +1,13 @@
+name: Suggest a data source
+description: A public, legally collectable crime-data source
+labels: [source]
+body:
+  - type: input
+    attributes: {label: URL}
+    validations: {required: true}
+  - type: input
+    attributes: {label: Publisher}
+    validations: {required: true}
+  - type: textarea
+    attributes: {label: Terms / robots.txt, description: "Confirm collection is allowed and no login or captcha is needed."}
+    validations: {required: true}

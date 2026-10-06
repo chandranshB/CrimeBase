@@ -1,0 +1,37 @@
+name: news
+on:
+  schedule: [{cron: "0 */3 * * *"}]
+  workflow_dispatch:
+    inputs:
+      backfill: {description: "Also pull historic feed snapshots from Wayback", type: boolean, default: false}
+concurrency: kaggle
+jobs:
+  news:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    env:
+      KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+      KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -r requirements.txt
+      - run: python test_places.py && python test_news.py
+      - name: Check Kaggle login (fail in seconds, not after hours of work)
+        timeout-minutes: 10
+        run: source ci/kaggle.sh && { exists crimebase || true; }
+      - name: Restore previous dataset
+        timeout-minutes: 20
+        run: source ci/kaggle.sh && restore crimebase data/clean
+      - run: python news.py ${{ inputs.backfill && 'backfill' || '' }}
+        timeout-minutes: 320
+        env: {LLM_API_KEY: "${{ secrets.LLM_API_KEY }}", LLM_URL: "${{ secrets.LLM_URL }}", LLM_MODEL: "${{ secrets.LLM_MODEL }}"}
+      - name: Push clean data
+        timeout-minutes: 15
+        run: source ci/kaggle.sh && push crimebase data/clean kaggle/clean.json "news $(date -u +%FT%H)h"
+      - name: Polish Kaggle listing
+        continue-on-error: true
+        timeout-minutes: 30
+        run: source ci/kaggle.sh && polish crimebase data/clean

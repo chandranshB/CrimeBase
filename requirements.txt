@@ -1,0 +1,7 @@
+requests
+pandas
+pyarrow
+pdfplumber
+openpyxl
+xlrd
+kaggle

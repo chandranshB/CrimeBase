@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this data, please cite it."
+title: "CrimeBase: source-cited India crime data"
+type: dataset
+authors:
+  - given-names: Chandransh
+    alias: chandranshB
+repository-code: "https://github.com/chandranshB/CrimeBase"
+license: AGPL-3.0-only
+keywords: [india, crime, ncrb, open data, wayback machine]

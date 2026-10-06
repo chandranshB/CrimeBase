@@ -1,0 +1,9 @@
+name: Bug report
+description: Wrong data, a crashing script, or a failing workflow
+labels: [bug]
+body:
+  - type: textarea
+    attributes: {label: What went wrong, description: "Include the workflow run link or the dataset file and row (source_url) if relevant."}
+    validations: {required: true}
+  - type: textarea
+    attributes: {label: Expected}

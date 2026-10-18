@@ -65,6 +65,12 @@ Tables with no total row to add up to (a national crime-head table, a city table
 ## ref_states.csv, ref_categories.csv
 The code lists behind `state_code` and `category`/`crime_category`. `all_crimes` appears only in facts: a grand total across heads, not one crime type. `other` in facts means no keyword rule recognised the label.
 
+## unmapped_states.csv - diagnostic of unmapped state labels
+Two columns: `entity` (state or UT row label as printed in raw NCRB tables that could not be mapped to an ISO 3166-2:IN code) and `count` (frequency count across all parsed tables). Diagnostic table used to identify spelling variations or unrecognised administrative divisions in source tables.
+
+## manifest.csv - provenance ledger (crimebase-raw)
+`url, file, sha256, wayback_timestamp, digest, publisher, retrieved`. Records the cryptographic SHA-256 hash, fetch origin (live government portal or Internet Archive Wayback snapshot), capture timestamp, and publisher for every source document archived.
+
 ## PROFILE.md
 Auto-generated every run: row counts, years and states covered, label-quality gaps (what is still `other`/`unknown`), news volume by outlet and labeller. Read it first to know what the data can and cannot answer yet.
 

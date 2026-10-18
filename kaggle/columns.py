@@ -110,8 +110,18 @@ COLUMNS = {
         ("publishers", S, "Outlet names, comma-separated."),
         ("example_url", S, "URL of one report."),
     ],
-    "ref_states.csv": [("state_code", S, "ISO 3166-2:IN code."), ("state", S, "State / UT name.")],
-    "ref_categories.csv": [("category", S, "Category code used in crime_category / category."), ("description", S, "What it covers.")],
+    "ref_states.csv": [
+        ("state_code", S, "ISO 3166-2:IN two-letter alpha code for the state or union territory (e.g. MH, DL, KL)."),
+        ("state", S, "Full standardized name of the state or union territory (e.g. Maharashtra, Delhi, Kerala)."),
+    ],
+    "ref_categories.csv": [
+        ("category", S, "Canonical crime category code used in crime_category and news category (e.g. murder, theft, sexual_offence)."),
+        ("description", S, "Scope and definition of offences included under this canonical crime category."),
+    ],
+    "unmapped_states.csv": [
+        ("entity", S, "State / UT row label as printed in raw NCRB tables that could not be mapped to an ISO 3166-2:IN code."),
+        ("count", N, "Frequency count of how many times this unmapped label appeared across all parsed tables."),
+    ],
     "manifest.csv": [
         ("url", S, "URL the file was fetched from."),
         ("file", S, "Document id; the file is raw-<first character>/<file> in this dataset."),
@@ -122,4 +132,6 @@ COLUMNS = {
         ("retrieved", S, "Date fetched from a live site (empty for Wayback captures)."),
     ],
 }
-COLUMNS["facts_pdf_lowconf.parquet"] = COLUMNS["facts_raw.parquet"] = COLUMNS["facts.parquet"]  # same columns (facts_raw: a subset)
+COLUMNS["facts_pdf_lowconf.parquet"] = COLUMNS["facts.parquet"]
+COLUMNS["facts_raw.parquet"] = [c for c in COLUMNS["facts.parquet"] if c[0] not in ("state_inferred", "qc", "title_key", "n_sources", "conflict")]
+

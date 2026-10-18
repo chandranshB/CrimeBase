@@ -20,11 +20,124 @@
  "resources": [
   {
    "path": "documents.csv",
-   "description": "Catalogue of every file: title, year, size, publisher, original URL, Internet Archive permalink, parse status."
+   "description": "Catalogue of every file: title, year, size, publisher, original URL, Internet Archive permalink, parse status.",
+   "schema": {
+    "fields": [
+     {
+      "name": "file",
+      "type": "string",
+      "description": "Document id (first 16 hex characters of its SHA-256 + extension). Same bytes under several URLs share one id."
+     },
+     {
+      "name": "raw_path",
+      "type": "string",
+      "description": "Where the original file is in the crimebase-raw dataset (raw-<first character>/<file>)."
+     },
+     {
+      "name": "ext",
+      "type": "string",
+      "description": "File type: pdf, xls, xlsx, csv, zip, doc, docx."
+     },
+     {
+      "name": "bytes",
+      "type": "numeric",
+      "description": "File size in bytes."
+     },
+     {
+      "name": "publisher",
+      "type": "string",
+      "description": "Organisation that published the document."
+     },
+     {
+      "name": "title_hint",
+      "type": "string",
+      "description": "Readable guess at the title, from the file name in the URL."
+     },
+     {
+      "name": "year_hint",
+      "type": "numeric",
+      "description": "Year named in the URL, when exactly one is; empty otherwise."
+     },
+     {
+      "name": "source_url",
+      "type": "string",
+      "description": "First URL the file was seen at."
+     },
+     {
+      "name": "wayback_url",
+      "type": "string",
+      "description": "Internet Archive permalink of the newest capture of these bytes; empty if only seen on a live site."
+     },
+     {
+      "name": "first_capture",
+      "type": "string",
+      "description": "Date (YYYYMMDD) of the earliest Wayback capture."
+     },
+     {
+      "name": "last_capture",
+      "type": "string",
+      "description": "Date (YYYYMMDD) of the latest Wayback capture."
+     },
+     {
+      "name": "n_urls",
+      "type": "numeric",
+      "description": "Number of distinct URLs that served these bytes."
+     },
+     {
+      "name": "status",
+      "type": "string",
+      "description": "facts = figures in facts.parquet (an Excel table, or a PDF table whose columns add up); facts_low_confidence = a PDF whose figures could not be checked (facts_pdf_lowconf.parquet); no_tables_found = readable but no NCRB-style table; not_parsed = a type the parser does not read yet."
+     },
+     {
+      "name": "n_facts",
+      "type": "numeric",
+      "description": "Number of numbers extracted from the file."
+     }
+    ]
+   }
   },
   {
    "path": "manifest.csv",
-   "description": "Provenance ledger: every URL each file was seen at, with SHA-256, Wayback capture time, publisher and fetch date."
+   "description": "Provenance ledger: every URL each file was seen at, with SHA-256, Wayback capture time, publisher and fetch date.",
+   "schema": {
+    "fields": [
+     {
+      "name": "url",
+      "type": "string",
+      "description": "URL the file was fetched from."
+     },
+     {
+      "name": "file",
+      "type": "string",
+      "description": "Document id; the file is raw-<first character>/<file> in this dataset."
+     },
+     {
+      "name": "sha256",
+      "type": "string",
+      "description": "SHA-256 of the file's bytes."
+     },
+     {
+      "name": "wayback_timestamp",
+      "type": "string",
+      "description": "14-digit Internet Archive capture time; empty if fetched from a live site."
+     },
+     {
+      "name": "digest",
+      "type": "string",
+      "description": "Internet Archive content digest of the capture."
+     },
+     {
+      "name": "publisher",
+      "type": "string",
+      "description": "Organisation that published the document."
+     },
+     {
+      "name": "retrieved",
+      "type": "string",
+      "description": "Date fetched from a live site (empty for Wayback captures)."
+     }
+    ]
+   }
   },
   {
    "path": "live_state.json",

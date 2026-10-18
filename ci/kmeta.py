@@ -28,6 +28,8 @@ def prep(tpl, d, user):
             for c in cols:
                 if c not in docs: print(f"::warning::{r['path']}: column '{c}' has no description in kaggle/columns.py")
             r["schema"] = {"fields": [{"name": c, "description": docs[c][1] if c in docs else "", "type": docs[c][0] if c in docs else "string"} for c in cols]}
+        elif not cols and docs and "schema" not in r:
+            r["schema"] = {"fields": [{"name": n, "description": desc, "type": typ} for n, typ, desc in COLUMNS.get(r["path"], [])]}
     for f in sorted(p.name for p in d.iterdir() if p.is_file() and p.name not in listed | {"dataset-metadata.json", "dataset-cover-image.png"}):
         print(f"::warning::{f} is in the dataset folder but has no description in {Path(tpl).name}")
     if cover: shutil.copy(cover, d / "dataset-cover-image.png")  # the name Kaggle looks for

@@ -51,9 +51,17 @@ jobs:
               if f.suffix == ".parquet": pq.write_table(pa.table({c: pa.array([], pa.string()) for c in cols or ["x"]}), f)
               elif f.suffix == ".csv": f.write_text(",".join(cols or ["x"]) + chr(10))
               else: f.write_text("x")
+          d_raw = Path("/tmp/stub_raw"); d_raw.mkdir(exist_ok=True)
+          for r in json.load(open("kaggle/raw.json"))["resources"]:
+              f, cols = d_raw / r["path"].replace("*", "0"), [c for c, _, _ in COLUMNS.get(r["path"], [])]
+              if f.suffix == ".parquet": pq.write_table(pa.table({c: pa.array([], pa.string()) for c in cols or ["x"]}), f)
+              elif f.suffix == ".csv": f.write_text(",".join(cols or ["x"]) + chr(10))
+              else: f.write_text("x")
           PY
           python ci/kmeta.py prep kaggle/clean.json /tmp/stub "$KAGGLE_USERNAME"
           polish crimebase /tmp/stub
+          python ci/kmeta.py prep kaggle/raw.json /tmp/stub_raw "$KAGGLE_USERNAME"
+          polish crimebase-raw /tmp/stub_raw
           kaggle datasets metadata "$KAGGLE_USERNAME/crimebase" -p /tmp/after
           python - <<'PY'
           import json

@@ -21,39 +21,690 @@
  "resources": [
   {
    "path": "crime_state_year.csv",
-   "description": "The clean table: state/UT x year x crime head x measure, from NCRB tables whose state rows add up to the all-India figure. Join `file` to documents.csv for the source."
+   "description": "The clean table: state/UT x year x crime head x measure, from NCRB tables whose state rows add up to the all-India figure. Join `file` to documents.csv for the source.",
+   "schema": {
+    "fields": [
+     {
+      "name": "state_code",
+      "type": "string",
+      "description": "ISO 3166-2:IN code of the state or union territory (MH, DL, KL ...); see ref_states.csv."
+     },
+     {
+      "name": "state",
+      "type": "string",
+      "description": "State / UT name (current names; Orissa = Odisha etc.)."
+     },
+     {
+      "name": "year",
+      "type": "numeric",
+      "description": "Calendar year the number refers to."
+     },
+     {
+      "name": "scope",
+      "type": "string",
+      "description": "Which NCRB table family the number comes from: ipc, sll, women, children, scheduled_castes, scheduled_tribes, senior_citizens, juveniles, cyber. The same head appears in several families (rape under ipc and women), so keep scope in any filter."
+     },
+     {
+      "name": "crime_head",
+      "type": "string",
+      "description": "Crime head exactly as the table prints it, parent heads first, joined by ' | ' (e.g. 'Murder (Sec.302 IPC) | A) Murder with Rape/POCSO')."
+     },
+     {
+      "name": "crime_category",
+      "type": "string",
+      "description": "Canonical category of the head (see ref_categories.csv); all_crimes = a grand total, other = no rule matched. Inferred from the head text."
+     },
+     {
+      "name": "metric",
+      "type": "string",
+      "description": "What the number counts: cases_registered, cases_chargesheeted, cases_convicted, persons_arrested, persons_chargesheeted, persons_convicted or victims."
+     },
+     {
+      "name": "value",
+      "type": "numeric",
+      "description": "The number as published."
+     },
+     {
+      "name": "disputed",
+      "type": "boolean",
+      "description": "True if another file reports a different value for the same state, year, scope, head and metric; the value shown is the one most tables agree on."
+     },
+     {
+      "name": "source",
+      "type": "string",
+      "description": "state_table = a row of NCRB's state-wise table (the states add up to NCRB's all-India row); district_total = NCRB's own state Total row of a district-wise table (the districts add up to it). The district tables are how 2016-2020 get states."
+     },
+     {
+      "name": "table_id",
+      "type": "string",
+      "description": "NCRB's own table number (TABLE 3A.2 ...); empty for older files that carry none."
+     },
+     {
+      "name": "file",
+      "type": "string",
+      "description": "Document id: join to documents.csv for the source URL, the Wayback permalink and the title. The original file is raw-<first character>/<file> in the crimebase-raw dataset."
+     }
+    ]
+   }
   },
   {
    "path": "crime_india_year.csv",
-   "description": "The same table for all of India: national crime-head tables plus the all-India row of each state table."
+   "description": "The same table for all of India: national crime-head tables plus the all-India row of each state table.",
+   "schema": {
+    "fields": [
+     {
+      "name": "year",
+      "type": "numeric",
+      "description": "Calendar year the number refers to."
+     },
+     {
+      "name": "scope",
+      "type": "string",
+      "description": "NCRB table family: ipc, sll, women, children, scheduled_castes, scheduled_tribes, senior_citizens, juveniles, cyber. Families overlap, so keep scope in any filter."
+     },
+     {
+      "name": "crime_head",
+      "type": "string",
+      "description": "Crime head exactly as the table prints it, parent heads first, joined by ' | '."
+     },
+     {
+      "name": "crime_category",
+      "type": "string",
+      "description": "Canonical category of the head (see ref_categories.csv); all_crimes = a grand total. Inferred from the head text."
+     },
+     {
+      "name": "metric",
+      "type": "string",
+      "description": "cases_registered, cases_chargesheeted, cases_convicted, persons_arrested, persons_chargesheeted, persons_convicted, victims, rate (per lakh population, as published) or percentage (share of the table's total)."
+     },
+     {
+      "name": "value",
+      "type": "numeric",
+      "description": "The number as published for all of India."
+     },
+     {
+      "name": "disputed",
+      "type": "boolean",
+      "description": "True if another file reports a different value for the same year, scope, head and metric; the value shown is the one most tables agree on."
+     },
+     {
+      "name": "checked",
+      "type": "boolean",
+      "description": "True if the number is the all-India row of a state table whose states add up to it (within 0.5%). National crime-head tables (2018 onward) have no state rows to check against."
+     },
+     {
+      "name": "table_id",
+      "type": "string",
+      "description": "NCRB's own table number; empty for older files."
+     },
+     {
+      "name": "file",
+      "type": "string",
+      "description": "Document id: join to documents.csv for the source URL and Wayback permalink."
+     }
+    ]
+   }
   },
   {
    "path": "documents.csv",
-   "description": "Catalogue of every source document: title, publisher, original URL, Internet Archive permalink, how many numbers it gave."
+   "description": "Catalogue of every source document: title, publisher, original URL, Internet Archive permalink, how many numbers it gave.",
+   "schema": {
+    "fields": [
+     {
+      "name": "file",
+      "type": "string",
+      "description": "Document id (first 16 hex characters of its SHA-256 + extension). Same bytes under several URLs share one id."
+     },
+     {
+      "name": "raw_path",
+      "type": "string",
+      "description": "Where the original file is in the crimebase-raw dataset (raw-<first character>/<file>)."
+     },
+     {
+      "name": "ext",
+      "type": "string",
+      "description": "File type: pdf, xls, xlsx, csv, zip, doc, docx."
+     },
+     {
+      "name": "bytes",
+      "type": "numeric",
+      "description": "File size in bytes."
+     },
+     {
+      "name": "publisher",
+      "type": "string",
+      "description": "Organisation that published the document."
+     },
+     {
+      "name": "title_hint",
+      "type": "string",
+      "description": "Readable guess at the title, from the file name in the URL."
+     },
+     {
+      "name": "year_hint",
+      "type": "numeric",
+      "description": "Year named in the URL, when exactly one is; empty otherwise."
+     },
+     {
+      "name": "source_url",
+      "type": "string",
+      "description": "First URL the file was seen at."
+     },
+     {
+      "name": "wayback_url",
+      "type": "string",
+      "description": "Internet Archive permalink of the newest capture of these bytes; empty if only seen on a live site."
+     },
+     {
+      "name": "first_capture",
+      "type": "string",
+      "description": "Date (YYYYMMDD) of the earliest Wayback capture."
+     },
+     {
+      "name": "last_capture",
+      "type": "string",
+      "description": "Date (YYYYMMDD) of the latest Wayback capture."
+     },
+     {
+      "name": "n_urls",
+      "type": "numeric",
+      "description": "Number of distinct URLs that served these bytes."
+     },
+     {
+      "name": "status",
+      "type": "string",
+      "description": "facts = figures in facts.parquet (an Excel table, or a PDF table whose columns add up); facts_low_confidence = a PDF whose figures could not be checked (facts_pdf_lowconf.parquet); no_tables_found = readable but no NCRB-style table; not_parsed = a type the parser does not read yet."
+     },
+     {
+      "name": "n_facts",
+      "type": "numeric",
+      "description": "Number of numbers extracted from the file."
+     }
+    ]
+   }
   },
   {
    "path": "facts.parquet",
-   "description": "Every number from NCRB's Excel tables, one per row (state, district, city, crime head), with metric, category, year, QC flag and source URL + Wayback permalink."
+   "description": "Every number from NCRB's Excel tables, one per row (state, district, city, crime head), with metric, category, year, QC flag and source URL + Wayback permalink.",
+   "schema": {
+    "fields": [
+     {
+      "name": "file",
+      "type": "string",
+      "description": "Document id; see documents.csv. The original is raw-<first character>/<file> in crimebase-raw."
+     },
+     {
+      "name": "source_url",
+      "type": "string",
+      "description": "URL the document was published at (original or archived page URL)."
+     },
+     {
+      "name": "sheet",
+      "type": "string",
+      "description": "Sheet name inside the workbook ('pdf' for PDF extractions)."
+     },
+     {
+      "name": "table_id",
+      "type": "string",
+      "description": "NCRB's own table number, when printed."
+     },
+     {
+      "name": "table_title",
+      "type": "string",
+      "description": "Table title as printed above the header."
+     },
+     {
+      "name": "entity_type",
+      "type": "string",
+      "description": "What the row is: state, district, city, crime_head, state_or_district or other."
+     },
+     {
+      "name": "entity",
+      "type": "string",
+      "description": "Row label exactly as printed. Totals (is_total) are labelled e.g. 'TOTAL (ALL INDIA)'."
+     },
+     {
+      "name": "state_code",
+      "type": "string",
+      "description": "ISO 3166-2:IN code when the row is a state / UT, or a city (then the state it is in; see state_inferred); empty otherwise."
+     },
+     {
+      "name": "parent_state_code",
+      "type": "string",
+      "description": "For districts and cities: the state they belong to. Printed by the table, or inferred from a place table when it printed none (state_inferred = true)."
+     },
+     {
+      "name": "state_inferred",
+      "type": "boolean",
+      "description": "True if parent_state_code / state_code was worked out from the place name (GeoNames; cities, and districts in tables without state headings) rather than printed in the table. Names shared by several states are left empty unless context settles them."
+     },
+     {
+      "name": "is_total",
+      "type": "boolean",
+      "description": "True for total rows (all-India, state, grand total). Leave them out when summing."
+     },
+     {
+      "name": "column_label",
+      "type": "string",
+      "description": "Full column header, header levels joined by ' | '. NCRB abbreviations (CR, CCS, PART ...) are kept as printed."
+     },
+     {
+      "name": "metric",
+      "type": "string",
+      "description": "What the number counts (cases_registered, persons_arrested, ... rate, percentage, population, unknown). Inferred from the header text and NCRB's own abbreviations."
+     },
+     {
+      "name": "crime_category",
+      "type": "string",
+      "description": "Canonical crime category (ref_categories.csv), judged from the crime head or header, leaf first. Inferred."
+     },
+     {
+      "name": "victim_group",
+      "type": "string",
+      "description": "Who the table is about (women, children, senior_citizens, scheduled_castes, scheduled_tribes, foreigners, juvenile_offenders), from title or header; empty if not stated."
+     },
+     {
+      "name": "year",
+      "type": "numeric",
+      "description": "Calendar year of the number; empty when the source only gives a range."
+     },
+     {
+      "name": "year_source",
+      "type": "string",
+      "description": "Where the year was read from: row, column, sheet, title or path."
+     },
+     {
+      "name": "value",
+      "type": "numeric",
+      "description": "The number as published (rates are per lakh population)."
+     },
+     {
+      "name": "format",
+      "type": "string",
+      "description": "xls for Excel tables; pdf for tables read from a PDF (those rows are in facts.parquet only if their column adds up, otherwise in facts_pdf_lowconf.parquet)."
+     },
+     {
+      "name": "wayback_timestamp",
+      "type": "string",
+      "description": "14-digit capture time of the Wayback copy the fact was read from."
+     },
+     {
+      "name": "wayback_url",
+      "type": "string",
+      "description": "Internet Archive permalink of the exact capture the fact was read from. Empty for documents fetched from a live site."
+     },
+     {
+      "name": "publisher",
+      "type": "string",
+      "description": "Organisation that published the document."
+     },
+     {
+      "name": "qc",
+      "type": "string",
+      "description": "sum_ok = the state values add up (within 0.5%) to NCRB's own all-India row; block_ok = a state's districts add up to the Total row that closes them in a district-wise table; sum_mismatch = they do not; unchecked = no total to test against."
+     },
+     {
+      "name": "title_key",
+      "type": "string",
+      "description": "Table title lower-cased with numbers removed: groups the same table across years."
+     },
+     {
+      "name": "n_sources",
+      "type": "numeric",
+      "description": "How many files report a value for this exact key (entity, year, metric, column)."
+     },
+     {
+      "name": "conflict",
+      "type": "boolean",
+      "description": "True if files disagree on the value for this key; all values are kept, none is silently overwritten."
+     }
+    ]
+   }
   },
   {
    "path": "facts_pdf_lowconf.parquet",
-   "description": "The same facts extracted from archived PDFs. Entity, year and value are usually right but headers can shift a column: verify against the source."
+   "description": "The same facts extracted from archived PDFs. Entity, year and value are usually right but headers can shift a column: verify against the source.",
+   "schema": {
+    "fields": [
+     {
+      "name": "file",
+      "type": "string",
+      "description": "Document id; see documents.csv. The original is raw-<first character>/<file> in crimebase-raw."
+     },
+     {
+      "name": "source_url",
+      "type": "string",
+      "description": "URL the document was published at (original or archived page URL)."
+     },
+     {
+      "name": "sheet",
+      "type": "string",
+      "description": "Sheet name inside the workbook ('pdf' for PDF extractions)."
+     },
+     {
+      "name": "table_id",
+      "type": "string",
+      "description": "NCRB's own table number, when printed."
+     },
+     {
+      "name": "table_title",
+      "type": "string",
+      "description": "Table title as printed above the header."
+     },
+     {
+      "name": "entity_type",
+      "type": "string",
+      "description": "What the row is: state, district, city, crime_head, state_or_district or other."
+     },
+     {
+      "name": "entity",
+      "type": "string",
+      "description": "Row label exactly as printed. Totals (is_total) are labelled e.g. 'TOTAL (ALL INDIA)'."
+     },
+     {
+      "name": "state_code",
+      "type": "string",
+      "description": "ISO 3166-2:IN code when the row is a state / UT, or a city (then the state it is in; see state_inferred); empty otherwise."
+     },
+     {
+      "name": "parent_state_code",
+      "type": "string",
+      "description": "For districts and cities: the state they belong to. Printed by the table, or inferred from a place table when it printed none (state_inferred = true)."
+     },
+     {
+      "name": "state_inferred",
+      "type": "boolean",
+      "description": "True if parent_state_code / state_code was worked out from the place name (GeoNames; cities, and districts in tables without state headings) rather than printed in the table. Names shared by several states are left empty unless context settles them."
+     },
+     {
+      "name": "is_total",
+      "type": "boolean",
+      "description": "True for total rows (all-India, state, grand total). Leave them out when summing."
+     },
+     {
+      "name": "column_label",
+      "type": "string",
+      "description": "Full column header, header levels joined by ' | '. NCRB abbreviations (CR, CCS, PART ...) are kept as printed."
+     },
+     {
+      "name": "metric",
+      "type": "string",
+      "description": "What the number counts (cases_registered, persons_arrested, ... rate, percentage, population, unknown). Inferred from the header text and NCRB's own abbreviations."
+     },
+     {
+      "name": "crime_category",
+      "type": "string",
+      "description": "Canonical crime category (ref_categories.csv), judged from the crime head or header, leaf first. Inferred."
+     },
+     {
+      "name": "victim_group",
+      "type": "string",
+      "description": "Who the table is about (women, children, senior_citizens, scheduled_castes, scheduled_tribes, foreigners, juvenile_offenders), from title or header; empty if not stated."
+     },
+     {
+      "name": "year",
+      "type": "numeric",
+      "description": "Calendar year of the number; empty when the source only gives a range."
+     },
+     {
+      "name": "year_source",
+      "type": "string",
+      "description": "Where the year was read from: row, column, sheet, title or path."
+     },
+     {
+      "name": "value",
+      "type": "numeric",
+      "description": "The number as published (rates are per lakh population)."
+     },
+     {
+      "name": "format",
+      "type": "string",
+      "description": "xls for Excel tables; pdf for tables read from a PDF (those rows are in facts.parquet only if their column adds up, otherwise in facts_pdf_lowconf.parquet)."
+     },
+     {
+      "name": "wayback_timestamp",
+      "type": "string",
+      "description": "14-digit capture time of the Wayback copy the fact was read from."
+     },
+     {
+      "name": "wayback_url",
+      "type": "string",
+      "description": "Internet Archive permalink of the exact capture the fact was read from. Empty for documents fetched from a live site."
+     },
+     {
+      "name": "publisher",
+      "type": "string",
+      "description": "Organisation that published the document."
+     },
+     {
+      "name": "qc",
+      "type": "string",
+      "description": "sum_ok = the state values add up (within 0.5%) to NCRB's own all-India row; block_ok = a state's districts add up to the Total row that closes them in a district-wise table; sum_mismatch = they do not; unchecked = no total to test against."
+     },
+     {
+      "name": "title_key",
+      "type": "string",
+      "description": "Table title lower-cased with numbers removed: groups the same table across years."
+     },
+     {
+      "name": "n_sources",
+      "type": "numeric",
+      "description": "How many files report a value for this exact key (entity, year, metric, column)."
+     },
+     {
+      "name": "conflict",
+      "type": "boolean",
+      "description": "True if files disagree on the value for this key; all values are kept, none is silently overwritten."
+     }
+    ]
+   }
   },
   {
    "path": "news.parquet",
-   "description": "Crime stories from Indian news feeds: link, headline and one-line summary (withheld for sensitive stories), category, state, district, victim group, stage, event cluster."
+   "description": "Crime stories from Indian news feeds: link, headline and one-line summary (withheld for sensitive stories), category, state, district, victim group, stage, event cluster.",
+   "schema": {
+    "fields": [
+     {
+      "name": "url",
+      "type": "string",
+      "description": "Article URL on the publisher's site (tracking parameters removed)."
+     },
+     {
+      "name": "domain",
+      "type": "string",
+      "description": "Publisher's domain."
+     },
+     {
+      "name": "publisher",
+      "type": "string",
+      "description": "Outlet name."
+     },
+     {
+      "name": "source_feed",
+      "type": "string",
+      "description": "RSS feed the article was found in."
+     },
+     {
+      "name": "archived_snapshot",
+      "type": "string",
+      "description": "For stories found in an archived copy of a feed: the Wayback permalink of that copy; empty for live reads."
+     },
+     {
+      "name": "published",
+      "type": "string",
+      "description": "Publication date, YYYY-MM-DD."
+     },
+     {
+      "name": "category",
+      "type": "string",
+      "description": "Crime category (ref_categories.csv)."
+     },
+     {
+      "name": "victim_group",
+      "type": "string",
+      "description": "women, children, senior_citizens, scheduled_castes, scheduled_tribes, foreigners or juvenile_offenders; empty if not stated."
+     },
+     {
+      "name": "state_code",
+      "type": "string",
+      "description": "ISO 3166-2:IN code of the state the story happened in. Worked out from a state or from any town, city or district named in the headline (a place shared by several states is skipped unless the headline settles it); empty otherwise."
+     },
+     {
+      "name": "place",
+      "type": "string",
+      "description": "The town, city or district named in the headline that the state was worked out from; empty if none was named."
+     },
+     {
+      "name": "district",
+      "type": "string",
+      "description": "Set when that place is a district (or a district-level city) in the resolved state."
+     },
+     {
+      "name": "state_basis",
+      "type": "string",
+      "description": "How state_code was found: headline (a state or place named in it), feed (the section feed is about one state or city; weaker) or llm (the AI pass). Empty when no state could be told."
+     },
+     {
+      "name": "stage",
+      "type": "string",
+      "description": "Where the story sits in the criminal process: incident, arrest, investigation, trial, verdict. Filled only by the AI pass."
+     },
+     {
+      "name": "title",
+      "type": "string",
+      "description": "Headline. Withheld (empty) for sexual-offence and child-victim stories."
+     },
+     {
+      "name": "summary",
+      "type": "string",
+      "description": "The feed's own one-line summary, as syndicated by the publisher. Withheld with the headline."
+     },
+     {
+      "name": "sig",
+      "type": "string",
+      "description": "Hashed headline words used to find duplicate reports."
+     },
+     {
+      "name": "labeller",
+      "type": "string",
+      "description": "rules (keyword classifier) or llm (a language model also read the headline and judged it)."
+     },
+     {
+      "name": "cluster_id",
+      "type": "string",
+      "description": "Reports of the same event share a cluster_id. Count distinct values for incidents."
+     },
+     {
+      "name": "archive_url",
+      "type": "string",
+      "description": "Link that opens the newest Internet Archive capture of the article if one exists (otherwise the archive offers to save it)."
+     }
+    ]
+   }
   },
   {
    "path": "news_events.parquet",
-   "description": "One row per distinct news event, with how many outlets reported it."
+   "description": "One row per distinct news event, with how many outlets reported it.",
+   "schema": {
+    "fields": [
+     {
+      "name": "cluster_id",
+      "type": "string",
+      "description": "Event id (same as news.parquet)."
+     },
+     {
+      "name": "first_published",
+      "type": "string",
+      "description": "Date of the earliest report, YYYY-MM-DD."
+     },
+     {
+      "name": "last_published",
+      "type": "string",
+      "description": "Date of the latest report."
+     },
+     {
+      "name": "category",
+      "type": "string",
+      "description": "Most common category among the reports."
+     },
+     {
+      "name": "state_code",
+      "type": "string",
+      "description": "Most common state among the reports."
+     },
+     {
+      "name": "district",
+      "type": "string",
+      "description": "Most common district."
+     },
+     {
+      "name": "victim_group",
+      "type": "string",
+      "description": "Most common victim group."
+     },
+     {
+      "name": "stage",
+      "type": "string",
+      "description": "Furthest stage the coverage reached."
+     },
+     {
+      "name": "n_articles",
+      "type": "numeric",
+      "description": "Reports of the event."
+     },
+     {
+      "name": "n_publishers",
+      "type": "numeric",
+      "description": "Distinct outlets that reported it."
+     },
+     {
+      "name": "publishers",
+      "type": "string",
+      "description": "Outlet names, comma-separated."
+     },
+     {
+      "name": "example_url",
+      "type": "string",
+      "description": "URL of one report."
+     }
+    ]
+   }
   },
   {
    "path": "ref_states.csv",
-   "description": "ISO 3166-2:IN state / UT codes used in the state_code columns."
+   "description": "ISO 3166-2:IN state / UT codes used in the state_code columns.",
+   "schema": {
+    "fields": [
+     {
+      "name": "state_code",
+      "type": "string",
+      "description": "ISO 3166-2:IN two-letter alpha code for the state or union territory (e.g. MH, DL, KL)."
+     },
+     {
+      "name": "state",
+      "type": "string",
+      "description": "Full standardized name of the state or union territory (e.g. Maharashtra, Delhi, Kerala)."
+     }
+    ]
+   }
   },
   {
    "path": "ref_categories.csv",
-   "description": "The crime category vocabulary with a one-line definition each."
+   "description": "The crime category vocabulary with a one-line definition each.",
+   "schema": {
+    "fields": [
+     {
+      "name": "category",
+      "type": "string",
+      "description": "Canonical crime category code used in crime_category and news category (e.g. murder, theft, sexual_offence)."
+     },
+     {
+      "name": "description",
+      "type": "string",
+      "description": "Scope and definition of offences included under this canonical crime category."
+     }
+    ]
+   }
   },
   {
    "path": "PROFILE.md",
@@ -65,7 +716,116 @@
   },
   {
    "path": "facts_raw.parquet",
-   "description": "Pipeline working state (parsed rows before QC and de-duplication). Not for analysis."
+   "description": "Pipeline working state (parsed rows before QC and de-duplication). Not for analysis.",
+   "schema": {
+    "fields": [
+     {
+      "name": "file",
+      "type": "string",
+      "description": "Document id; see documents.csv. The original is raw-<first character>/<file> in crimebase-raw."
+     },
+     {
+      "name": "source_url",
+      "type": "string",
+      "description": "URL the document was published at (original or archived page URL)."
+     },
+     {
+      "name": "sheet",
+      "type": "string",
+      "description": "Sheet name inside the workbook ('pdf' for PDF extractions)."
+     },
+     {
+      "name": "table_id",
+      "type": "string",
+      "description": "NCRB's own table number, when printed."
+     },
+     {
+      "name": "table_title",
+      "type": "string",
+      "description": "Table title as printed above the header."
+     },
+     {
+      "name": "entity_type",
+      "type": "string",
+      "description": "What the row is: state, district, city, crime_head, state_or_district or other."
+     },
+     {
+      "name": "entity",
+      "type": "string",
+      "description": "Row label exactly as printed. Totals (is_total) are labelled e.g. 'TOTAL (ALL INDIA)'."
+     },
+     {
+      "name": "state_code",
+      "type": "string",
+      "description": "ISO 3166-2:IN code when the row is a state / UT, or a city (then the state it is in; see state_inferred); empty otherwise."
+     },
+     {
+      "name": "parent_state_code",
+      "type": "string",
+      "description": "For districts and cities: the state they belong to. Printed by the table, or inferred from a place table when it printed none (state_inferred = true)."
+     },
+     {
+      "name": "is_total",
+      "type": "boolean",
+      "description": "True for total rows (all-India, state, grand total). Leave them out when summing."
+     },
+     {
+      "name": "column_label",
+      "type": "string",
+      "description": "Full column header, header levels joined by ' | '. NCRB abbreviations (CR, CCS, PART ...) are kept as printed."
+     },
+     {
+      "name": "metric",
+      "type": "string",
+      "description": "What the number counts (cases_registered, persons_arrested, ... rate, percentage, population, unknown). Inferred from the header text and NCRB's own abbreviations."
+     },
+     {
+      "name": "crime_category",
+      "type": "string",
+      "description": "Canonical crime category (ref_categories.csv), judged from the crime head or header, leaf first. Inferred."
+     },
+     {
+      "name": "victim_group",
+      "type": "string",
+      "description": "Who the table is about (women, children, senior_citizens, scheduled_castes, scheduled_tribes, foreigners, juvenile_offenders), from title or header; empty if not stated."
+     },
+     {
+      "name": "year",
+      "type": "numeric",
+      "description": "Calendar year of the number; empty when the source only gives a range."
+     },
+     {
+      "name": "year_source",
+      "type": "string",
+      "description": "Where the year was read from: row, column, sheet, title or path."
+     },
+     {
+      "name": "value",
+      "type": "numeric",
+      "description": "The number as published (rates are per lakh population)."
+     },
+     {
+      "name": "format",
+      "type": "string",
+      "description": "xls for Excel tables; pdf for tables read from a PDF (those rows are in facts.parquet only if their column adds up, otherwise in facts_pdf_lowconf.parquet)."
+     },
+     {
+      "name": "wayback_timestamp",
+      "type": "string",
+      "description": "14-digit capture time of the Wayback copy the fact was read from."
+     },
+     {
+      "name": "wayback_url",
+      "type": "string",
+      "description": "Internet Archive permalink of the exact capture the fact was read from. Empty for documents fetched from a live site."
+     },
+     {
+      "name": "publisher",
+      "type": "string",
+      "description": "Organisation that published the document."
+     }
+    ]
+   }
   },
   {
    "path": "parse_state.json",
@@ -73,7 +833,21 @@
   },
   {
    "path": "unmapped_states.csv",
-   "description": "Diagnostic: state-table row labels the parser could not map to a state, with counts."
+   "description": "Diagnostic: state-table row labels the parser could not map to a state, with counts.",
+   "schema": {
+    "fields": [
+     {
+      "name": "entity",
+      "type": "string",
+      "description": "State / UT row label as printed in raw NCRB tables that could not be mapped to an ISO 3166-2:IN code."
+     },
+     {
+      "name": "count",
+      "type": "numeric",
+      "description": "Frequency count of how many times this unmapped label appeared across all parsed tables."
+     }
+    ]
+   }
   },
   {
    "path": "news_snapshots.txt",
